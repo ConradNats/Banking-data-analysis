@@ -33,12 +33,14 @@ Extract the supplied CSV files into `data/raw/` on your own computer. The raw/pr
 - **Loan repayment analysis (`02_loan_repayment.ipynb`)**:
   - Merged `loan_payments` → `accounts` → `customers`/`branches` using the verified key `loan_payments.loan_id` → `accounts.account_id`.
   - Checked merge quality and basic repayment metrics (late payment rate, amount summaries).
-  - Added **outlier checks** (percentiles + IQR flags) with clear visualizations and extreme-value review (flags for review, not auto-removal).
-  - Added **time-based trends** (monthly payment volume, total paid, late rate).
-  - Added **loan-level aggregation** (`loan_level`: per-loan payments, totals/averages, late behavior, “ever late”).
-  - Improved trend storytelling with **readable charts** (small multiples per segment, 3-month rolling averages, low-volume months handled carefully).
-  - Added **deeper analysis**: late rate over time by `account_type`/state and loan-level breakdowns with **sample-size checks**.
-  - Added simple-English “Input/Output” and “Insight” notes throughout, and an option to save processed outputs to `data/processed/`.
+  - **Outlier detection & handling (Section 7, all in one place):** quick IQR checks (7A), enhanced distributions/boxplots and extreme-value review (7B), and recommended handling (7C) — **IQR flags** plus **p1–p99 capping (winsorizing)** for skewed monetary fields; `credit_score` kept as-is but flagged. Saves `data/processed/loans_full_processed.csv` (gitignored).
+  - **Time-based trends (readable storytelling):** overall monthly trends, a **Jan–Dec year×month heatmap** for late rate (9A), and **pairwise Jan–Dec comparisons from 2010 onward** for both late payment rate and payment volume (9B), with figures saved to `reports/figures/`.
+  - **February volume-drop investigation (Section 15):** compared Feb vs Jan/Mar using **payments per day** (controls for 28/29-day February), day-of-month (29–31) effects, and leap-year checks to explain what happened in February.
+  - **Loan-level aggregation (`loan_level`, Section 10):** per-loan payments, totals/averages, late behavior, and “ever late”.
+  - **Payment regularity & lateness severity (Section 16, loan-level):** severity buckets by % late, **max consecutive late run**, and payment-timing regularity (gap days) with sample-size-aware visuals.
+  - **Drivers of late payments (Section 17, segment + controls):** late rates by `account_type`, location, occupation, and `credit_score`/income/balance bands using capped values where appropriate, with minimum sample thresholds, ~95% CIs, and a simple control view (account type within credit-score band). Differences indicate association, not causation.
+  - **Deeper analysis:** late rate over time by `account_type`/state (readable small multiples + 3-month averages) and loan-level breakdowns with **sample-size checks**.
+  - Added simple-English “Input/Output” and “Insight” notes throughout, and options to save processed outputs/figures to `data/processed/` and `reports/figures/`.
 
 ## Verified relationships (key joins)
 
@@ -75,7 +77,36 @@ The figures below are saved to `reports/figures/` when you run `notebooks/02_loa
 
 ![Outlier distribution - balance](reports/figures/outlier_dist_balance.png)
 
-**Insight (simple terms):** Payment and balance fields often have a long “tail” (many typical values and a few very large ones). The dashed bounds and boxplot help flag unusual values, but **outliers aren’t automatically errors**—review extremes in context (e.g., large legitimate payments) before capping or removing.
+**Insight (simple terms):** Payment and balance fields often have a long “tail” (many typical values and a few very large ones). The dashed bounds and boxplot help flag unusual values, but **outliers aren’t automatically errors**—review extremes in context (e.g., large legitimate payments) before capping or removing. Outlier handling (Section 7C) also produces `data/processed/loans_full_processed.csv` locally (gitignored) with IQR flags and p1–p99 capped monetary columns for more stable analysis.
+
+### 5) Late payment rate by year and month (Jan–Dec heatmap)
+![Late rate heatmap by year and month](reports/figures/late_rate_heatmap_year_month.png)
+
+**Insight (simple terms):** This scans many years at once. Darker cells mean a higher late payment rate for that month/year. Look for repeating month patterns (seasonality) or years that stand out.
+
+### 6) Pairwise year comparisons (Jan–Dec, from 2010 onward)
+![Example pairwise comparison](reports/figures/compare_2010_vs_2011.png)
+
+**Insight (simple terms):** Each pair compares two years month-by-month for **late payment rate** and **payment volume** (saved as `reports/figures/compare_{year1}_vs_{year2}.png`, e.g., 2010 vs 2011, 2012 vs 2013, …). Compare the same month across years, use volume for context, and treat missing/low-volume months cautiously.
+
+### 7) February payment-volume investigation
+![Payments per day: Jan vs Feb vs Mar](reports/figures/feb_payments_per_day.png)
+
+**Insight (simple terms):** February can look lower because it has **fewer days** (28/29). **Payments per day** is the key test: if Feb’s per-day rate is close to Jan/Mar, the drop is mostly calendar/structural (and day 29–31 effects matter). If per-day is still much lower, investigate timing/processing/coverage factors.
+
+### 8) Payment regularity & lateness severity (loan-level)
+![Loans by lateness severity](reports/figures/loan_lateness_severity.png)
+
+![Payment gap by severity](reports/figures/loan_payment_gap_by_severity.png)
+
+**Insight (simple terms):** Severity buckets show how many loans are never late vs occasionally/frequently/chronic (by % of payments late). **Max consecutive late runs** and **payment timing gaps** help distinguish occasional slips from repeated/in-a-row lateness. These patterns guide review; they don’t prove causes.
+
+### 9) Drivers of late payments (segment + controls)
+![Late rate by account type (driver view)](reports/figures/late_rate_driver_account_type.png)
+
+![Late rate by account type within credit score band](reports/figures/late_rate_account_type_by_credit_band.png)
+
+**Insight (simple terms):** Segment charts compare late rates with **minimum sample sizes** and **~95% confidence intervals** (using capped bands where appropriate). Differences suggest associations, not causes. The credit-score-band control view helps compare account types within similar credit bands.
 
 ## Setup
 
