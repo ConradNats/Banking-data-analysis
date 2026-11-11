@@ -38,7 +38,7 @@ Extract the supplied CSV files into `data/raw/` on your own computer. The raw/pr
   - **February volume-drop investigation (Section 15):** compared Feb vs Jan/Mar using **payments per day** (controls for 28/29-day February), day-of-month (29–31) effects, and leap-year checks to explain what happened in February.
   - **Loan-level aggregation (`loan_level`, Section 10):** per-loan payments, totals/averages, late behavior, and “ever late”.
   - **Payment regularity & lateness severity (Section 16, loan-level):** severity buckets by % late, **max consecutive late run**, and payment-timing regularity (gap days) with sample-size-aware visuals.
-  - **Drivers of late payments (Section 17, segment + controls):** late rates by `account_type`, location, occupation, and `credit_score`/income/balance bands using capped values where appropriate, with minimum sample thresholds, ~95% CIs, and a simple control view (account type within credit-score band). Differences indicate association, not causation.
+  - **Drivers of late payments (Section 17, segment + controls):** late rates by `account_type`, location, occupation, gender, and `credit_score`/income/balance/status bands, using capped values where appropriate, with minimum sample thresholds and ~95% CIs. Adds an **effect-size check (Cramér's V)**, a **credit-score standardized** account-type comparison (direct standardization), and a **loan-level cross-check** (ever late vs chronic >30% late). Result in this dataset: late rates sit near the overall **~12%** with a **spread under 0.5 percentage points** and **negligible Cramér's V (~0.00–0.01)** — no meaningful segment-level driver in these fields.
   - **Deeper analysis:** late rate over time by `account_type`/state (readable small multiples + 3-month averages) and loan-level breakdowns with **sample-size checks**.
   - Added simple-English “Input/Output” and “Insight” notes throughout, and options to save processed outputs/figures to `data/processed/` and `reports/figures/`.
 
@@ -104,9 +104,13 @@ The figures below are saved to `reports/figures/` when you run `notebooks/02_loa
 ### 9) Drivers of late payments (segment + controls)
 ![Late rate by account type (driver view)](reports/figures/late_rate_driver_account_type.png)
 
+![Account type late rate: unadjusted vs standardized for credit score](reports/figures/late_rate_account_type_adjusted.png)
+
 ![Late rate by account type within credit score band](reports/figures/late_rate_account_type_by_credit_band.png)
 
-**Insight (simple terms):** Segment charts compare late rates with **minimum sample sizes** and **~95% confidence intervals** (using capped bands where appropriate). Differences suggest associations, not causes. The credit-score-band control view helps compare account types within similar credit bands.
+![Loan-level chronic lateness by account type](reports/figures/loan_chronic_rate_account_type.png)
+
+**Insight (simple terms):** The segment charts compare late rates with **minimum sample sizes**, **~95% confidence intervals**, and a dashed line for the overall rate. Differences are tiny: every major segment sits close to **~12%** (spread under **0.5 percentage points**) and **Cramér's V is negligible (~0.00–0.01)**. Standardizing account types to the same credit-score mix barely changes anything (change ≈ 0.00–0.02 pp), so the small gaps are not a credit-mix artefact. At the loan level, **“ever late” is ~96%** simply because loans have ~27 payments; a stricter **chronic (>30% late)** measure is ~0.7% of loans and also similar across account types. **Conclusion:** these segment fields do not meaningfully drive late payments — a real driver would need other variables (due dates, loan terms, income shocks, macro events).
 
 ## Setup
 
